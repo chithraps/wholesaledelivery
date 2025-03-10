@@ -98,7 +98,7 @@ const LoginPage = () => {
           </button>
         </form>
         <p className="mt-4 text-center text-sm text-gray-600">
-          Don't have an account?{" "}
+          Do not have an account?{" "}
           <button
             onClick={() => router.push("admin/signup")}
             className="text-blue-500 hover:underline"
