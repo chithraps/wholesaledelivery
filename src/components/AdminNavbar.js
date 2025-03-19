@@ -55,7 +55,7 @@ const AdminNavbar = () => {
             Product Inventory Management
           </button>
           <button
-            onClick={() => router.push("/tdProfile")}
+            onClick={() => router.push("/admin/getOrder")}
             className="hover:text-gray-200 text-left"
           >
             Order Management

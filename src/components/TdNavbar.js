@@ -31,12 +31,15 @@ const TdNavbar = () => {
                 <div className="flex flex-col py-6 space-y-6 px-4">
                     <h1 className="text-xl font-bold">Truck Driver Dashboard</h1>
                     <span>Welcome, {truckDriver?.name || "Driver"}!</span>
-
-                    <button onClick={() => router.push("/tdDashboard")} className="hover:text-gray-200 text-left">
-                        Dashboard
+                    
+                    <button onClick={() => router.push("/truckDriver/orderManagement")} className="hover:text-gray-200 text-left">
+                    Order Management
                     </button>
-                    <button onClick={() => router.push("/tdProfile")} className="hover:text-gray-200 text-left">
-                        Profile
+                    <button onClick={() => router.push("/truckDriver/deliveryTracking")} className="hover:text-gray-200 text-left">
+                    Delivery Tracking
+                    </button>
+                    <button onClick={() => router.push("/truckDriver/payment")} className="hover:text-gray-200 text-left">
+                    Payment Collection
                     </button>
                     <button onClick={handleLogout} className="bg-blue-500 px-3 py-1 rounded hover:bg-blue-600">
                         Logout
