@@ -4,45 +4,30 @@ import { jwtVerify } from "jose";
 export async function middleware(req) {
   let token = req.cookies.get("tdAuth")?.value || req.cookies.get("adminAuth")?.value;
 
-  console.log("Verifying token... ", token);
-
+  console.log("Verifying token... ",token);
+  
   if (!token || token.trim() === "") {
-    if (req.nextUrl.pathname === "/") {
-      return NextResponse.next(); 
-    }
     console.log("Unauthorized: No token provided");
     return NextResponse.redirect(new URL("/", req.url));
   }
 
   try {
-    if (!token.includes(".")) throw new Error("Invalid token format");
-    
     const secret = new TextEncoder().encode(process.env.JWTPRIVATEKEY);
     const { payload } = await jwtVerify(token, secret);
     
     console.log("Token Verified:", payload);
-    const role = payload.role;
-
-    
-    if (req.nextUrl.pathname === "/") {
-      console.log("hello")
-      if (role === "truckDriver") {
-        return NextResponse.redirect(new URL("/truckDriver/tdDashboard", req.url));
-      }
-      if (role === "admin") {
-        return NextResponse.redirect(new URL("/admin/dashboard", req.url));
-      }
-    }
 
     // Role-based access control
+    const role = payload.role;
+
     if (req.nextUrl.pathname.startsWith("/truckDriver") && role !== "truckDriver") {
-      console.log("Unauthorized: Cannot access truck driver routes");
+      console.log("Unauthorized:  cannot access truck driver routes");
       return NextResponse.redirect(new URL("/", req.url));
     }
 
     if (req.nextUrl.pathname.startsWith("/admin") && role !== "admin") {
-      console.log("Unauthorized: Cannot access admin routes");
-      return NextResponse.redirect(new URL("/", req.url));
+      console.log("Unauthorized:  cannot access admin routes");
+      return NextResponse.redirect(new URL("/admin", req.url));
     }
 
     return NextResponse.next();
@@ -53,5 +38,5 @@ export async function middleware(req) {
 }
 
 export const config = {
-  matcher: ["/","/truckDriver/:path*", "/admin/:path*"],
+  matcher: ["/truckDriver/tdDashboard/:path*", "/admin/dashboard:path*"], 
 };
