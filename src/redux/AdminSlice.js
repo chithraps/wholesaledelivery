@@ -6,7 +6,7 @@ const getAdminFromLocalStorage = () => {
   if (typeof window === "undefined") return null;
 
   const adminData = localStorage.getItem("admin");
-  console.log("Admin Data from localStorage:", adminData);
+  
   if (!adminData || adminData === "undefined") return null;
 
   try {
