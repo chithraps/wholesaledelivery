@@ -15,8 +15,8 @@ const CreateOrder = () => {
     truckDriver: "",
     vendor: "",
     products: [],
-    totalAmount: 0,
-    collectedAmount: 0,
+    totalAmount: "",
+    collectedAmount: "",
     status: "pending",
   });
 
@@ -24,7 +24,6 @@ const CreateOrder = () => {
     const fetchData = async () => {
       try {
         const response = await axios.get("/api/admin/orderData");
-        console.log(response.data.truckDrivers)
         setTruckDrivers(response.data.truckDrivers);
         setVendors(response.data.vendors);
         setProducts(response.data.products);
@@ -43,9 +42,7 @@ const CreateOrder = () => {
 
   const handleProductChange = (productId, quantity) => {
     const updatedProducts = [...formData.products];
-    const existingProduct = updatedProducts.find(
-      (p) => p.product === productId
-    );
+    const existingProduct = updatedProducts.find((p) => p.product === productId);
 
     if (existingProduct) {
       existingProduct.quantity = quantity;
@@ -56,12 +53,43 @@ const CreateOrder = () => {
     setFormData({ ...formData, products: updatedProducts });
   };
 
+  const validateForm = () => {
+    if (!formData.truckDriver) {
+      toast.error("Please select a truck driver.");
+      return false;
+    }
+    if (!formData.vendor) {
+      toast.error("Please select a vendor.");
+      return false;
+    }
+    if (formData.products.length === 0 || formData.products.every(p => p.quantity <= 0)) {
+      toast.error("Please select at least one product with a valid quantity.");
+      return false;
+    }
+    if (!formData.totalAmount || formData.totalAmount <= 0) {
+      toast.error("Total amount must be a positive number.");
+      return false;
+    }
+    if (formData.collectedAmount < 0) {
+      toast.error("Collected amount cannot be negative.");
+      return false;
+    }
+    if (Number(formData.collectedAmount) > Number(formData.totalAmount)) {
+      toast.error("Collected amount cannot exceed the total amount.");
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!validateForm()) return;
+
     try {
       await axios.post("/api/admin/order", formData);
       toast.success("Order created successfully!");
-      router.push("/admin/orders");
+      router.push("/admin/getOrder");
     } catch (error) {
       console.error("Error creating order:", error);
       toast.error("Failed to create order");
@@ -75,10 +103,7 @@ const CreateOrder = () => {
       <div className="flex-1 p-6 ml-[250px]">
         <h2 className="text-xl font-bold mb-4">Create Order</h2>
 
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white p-6 rounded shadow-md"
-        >
+        <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow-md">
           {/* Truck Driver Dropdown */}
           <label className="block mb-2">Truck Driver:</label>
           <select
@@ -150,19 +175,6 @@ const CreateOrder = () => {
             onChange={handleChange}
             className="w-full p-2 border rounded mb-4"
           />
-
-          {/* Status Dropdown */}
-          <label className="block mb-2">Status:</label>
-          <select
-            name="status"
-            value={formData.status}
-            onChange={handleChange}
-            className="w-full p-2 border rounded mb-4"
-          >
-            <option value="pending">Pending</option>
-            <option value="delivered">Delivered</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
 
           {/* Submit Button */}
           <button
