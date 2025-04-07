@@ -34,10 +34,7 @@ const TdNavbar = () => {
                     
                     <button onClick={() => router.push("/truckDriver/orderManagement")} className="hover:text-gray-200 text-left">
                     Order Management
-                    </button>
-                    <button onClick={() => router.push("/truckDriver/deliveryTracking")} className="hover:text-gray-200 text-left">
-                    Delivery Tracking
-                    </button>
+                    </button>                    
                     <button onClick={() => router.push("/truckDriver/payment")} className="hover:text-gray-200 text-left">
                     Payment Collection
                     </button>
