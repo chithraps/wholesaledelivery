@@ -33,10 +33,10 @@ const TdNavbar = () => {
                     <span>Welcome, {truckDriver?.name || "Driver"}!</span>
                     
                     <button onClick={() => router.push("/truckDriver/orderManagement")} className="hover:text-gray-200 text-left">
-                    Order Management
+                    Create Order
                     </button>                    
-                    <button onClick={() => router.push("/truckDriver/payment")} className="hover:text-gray-200 text-left">
-                    Payment Collection
+                    <button onClick={() => router.push("/truckDriver/viewOrders")} className="hover:text-gray-200 text-left">
+                    View Orders
                     </button>
                     <button onClick={handleLogout} className="bg-blue-500 px-3 py-1 rounded hover:bg-blue-600">
                         Logout
