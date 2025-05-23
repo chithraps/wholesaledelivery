@@ -62,79 +62,83 @@ export default function ProductsPage() {
 
   return (
     <div className="min-h-screen bg-gray-100 flex">
-      <AdminNavbar />
-      <ToastContainer />
-      <div className="flex-1 p-6 ml-[250px]">
-        <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-bold">Products List</h1>
-          <button
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-            onClick={() => router.push("/admin/addProduct")}
-          >
-            Add Product
-          </button>
-        </div>
-
-        {products.length === 0 ? (
-          <p className="text-center text-gray-500 text-lg">No products available.</p>
-        ) : (
-          <table className="w-full border-collapse border border-gray-300">
-            <thead>
-              <tr className="bg-gray-200">
-                <th className="border p-2">Product Name</th>
-                <th className="border p-2">Price</th>
-                <th className="border p-2">Category</th>
-                <th className="border p-2">Stock</th>
-                <th className="border p-2">Image</th>
-                <th className="border p-2">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {products.map((product) => (
-                <tr key={product._id} className="text-center">
-                  <td className="border p-2">{product.name}</td>
-                  <td className="border p-2">{product.price}</td>
-                  <td className="border p-2">{product.category}</td>
-                  <td className="border p-2">{product.stock}</td>
-                  <td className="border p-2">
-                    {product.image ? (
-                      <img
-                        src={product.imageUrl}
-                        alt={product.name}
-                        className="w-16 h-16 object-cover mx-auto"
-                      />
-                    ) : (
-                      "No Image"
-                    )}
-                  </td>
-                  <td className="border p-2">
-                    <button
-                      className="bg-blue-500 text-white px-3 py-1 rounded mr-2 hover:bg-blue-600"
-                      onClick={() => handleEdit(product)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                      onClick={() => handleDelete(product._id)}
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-
-      {isModalOpen && (
-        <EditProductModal
-          product={selectedProduct}
-          onClose={() => setIsModalOpen(false)}
-          onUpdateSuccess={handleUpdateSuccess}
-        />
-      )}
+  <AdminNavbar />
+  <ToastContainer />
+  <div className="flex-1 p-8 ml-[250px]">
+    <div className="flex justify-between items-center mb-6">
+      <h1 className="text-3xl font-semibold text-gray-800">Product Management</h1>
+      <button
+        onClick={() => router.push("/admin/addProduct")}
+        className="bg-indigo-600 text-white px-5 py-2 rounded-md shadow hover:bg-indigo-700 transition duration-200"
+      >
+        + Add Product
+      </button>
     </div>
+
+    {products.length === 0 ? (
+      <div className="bg-white p-10 rounded shadow text-center text-gray-500 text-lg">
+        No products available.
+      </div>
+    ) : (
+      <div className="overflow-x-auto rounded-lg shadow">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Name</th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Price</th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Category</th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Stock</th>
+              <th className="px-6 py-3 text-center text-sm font-medium text-gray-500">Image</th>
+              <th className="px-6 py-3 text-center text-sm font-medium text-gray-500">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {products.map((product) => (
+              <tr key={product._id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">{product.name}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">₹{product.price}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{product.category}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{product.stock}</td>
+                <td className="px-6 py-4 text-center">
+                  {product.imageUrl ? (
+                    <img
+                      src={product.imageUrl}
+                      alt={product.name}
+                      className="w-12 h-12 rounded object-cover mx-auto"
+                    />
+                  ) : (
+                    <span className="text-gray-400 italic">No image</span>
+                  )}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-center">
+                  <button
+                    onClick={() => handleEdit(product)}
+                    className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 mr-2 transition duration-200"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(product._id)}
+                    className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition duration-200"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )}
+  </div>
+
+  {isModalOpen && (
+    <EditProductModal
+      product={selectedProduct}
+      onClose={() => setIsModalOpen(false)}
+      onUpdateSuccess={handleUpdateSuccess}
+    />
+  )}
+</div>
   );
 }

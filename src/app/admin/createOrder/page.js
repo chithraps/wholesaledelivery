@@ -14,9 +14,11 @@ const CreateOrder = () => {
   const [formData, setFormData] = useState({
     truckDriver: "",
     vendor: "",
-    products: [],
+    product: {
+      product: "",
+      quantity: 0,
+    },
     totalAmount: "",
-    collectedAmount: "",
     status: "pending",
   });
 
@@ -37,23 +39,33 @@ const CreateOrder = () => {
   }, []);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleProductChange = (productId, quantity) => {
-    const updatedProducts = [...formData.products];
-    const existingProduct = updatedProducts.find((p) => p.product === productId);
-
-    if (existingProduct) {
-      existingProduct.quantity = quantity;
+    const { name, value } = e.target;
+    if (name === "product") {
+      setFormData({
+        ...formData,
+        product: { ...formData.product, product: value },
+      });
     } else {
-      updatedProducts.push({ product: productId, quantity: Number(quantity) });
+      setFormData({ ...formData, [name]: value });
     }
-
-    setFormData({ ...formData, products: updatedProducts });
   };
 
+  const calculateTotalAmount = () => {
+    const selectedProduct = products.find(
+      (prod) => prod._id === formData.product.product
+    );
+    const price = selectedProduct ? selectedProduct.price : 0;
+    return price * formData.product.quantity;
+  };
+  const handleQuantityChange = (e) => {
+    const quantity = parseInt(e.target.value, 10) || 0;
+    setFormData({
+      ...formData,
+      product: { ...formData.product, quantity },
+    });
+  };
   const validateForm = () => {
+    const totalAmount = calculateTotalAmount();
     if (!formData.truckDriver) {
       toast.error("Please select a truck driver.");
       return false;
@@ -62,22 +74,15 @@ const CreateOrder = () => {
       toast.error("Please select a vendor.");
       return false;
     }
-    if (formData.products.length === 0 || formData.products.every(p => p.quantity <= 0)) {
-      toast.error("Please select at least one product with a valid quantity.");
+    if (!formData.product.product || formData.product.quantity <= 0) {
+      toast.error("Please select a product and enter a valid quantity.");
       return false;
     }
-    if (!formData.totalAmount || formData.totalAmount <= 0) {
+    if (totalAmount <= 0) {
       toast.error("Total amount must be a positive number.");
       return false;
     }
-    if (formData.collectedAmount < 0) {
-      toast.error("Collected amount cannot be negative.");
-      return false;
-    }
-    if (Number(formData.collectedAmount) > Number(formData.totalAmount)) {
-      toast.error("Collected amount cannot exceed the total amount.");
-      return false;
-    }
+
     return true;
   };
 
@@ -87,7 +92,12 @@ const CreateOrder = () => {
     if (!validateForm()) return;
 
     try {
-      await axios.post("/api/admin/order", formData);
+      const totalAmount = calculateTotalAmount();
+      console.log(" formData ",formData)
+      await axios.post("/api/admin/order", {
+        ...formData,
+        totalAmount,
+      });
       toast.success("Order created successfully!");
       router.push("/admin/getOrder");
     } catch (error) {
@@ -97,93 +107,111 @@ const CreateOrder = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
+    <div className="min-h-screen bg-gray-50 flex">
       <AdminNavbar />
       <ToastContainer />
-      <div className="flex-1 p-6 ml-[250px]">
-        <h2 className="text-xl font-bold mb-4">Create Order</h2>
+      <div className="flex-1 p-8 ml-[250px]">
+        <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-xl p-8">
+          <h2 className="text-2xl font-semibold mb-6 text-gray-800">
+            Create New Order
+          </h2>
 
-        <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow-md">
-          {/* Truck Driver Dropdown */}
-          <label className="block mb-2">Truck Driver:</label>
-          <select
-            name="truckDriver"
-            value={formData.truckDriver}
-            onChange={handleChange}
-            required
-            className="w-full p-2 border rounded mb-4"
-          >
-            <option value="">Select a Truck Driver</option>
-            {truckDrivers.map((driver) => (
-              <option key={driver._id} value={driver._id}>
-                {driver.name}
-              </option>
-            ))}
-          </select>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Truck Driver Dropdown */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Truck Driver
+              </label>
+              <select
+                name="truckDriver"
+                value={formData.truckDriver}
+                onChange={handleChange}
+                className="w-full border-gray-300 rounded-lg p-2 focus:ring-green-500 focus:border-green-500"
+              >
+                <option value="">Select a Truck Driver</option>
+                {truckDrivers.map((driver) => (
+                  <option key={driver._id} value={driver._id}>
+                    {driver.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          {/* Vendor Dropdown */}
-          <label className="block mb-2">Vendor:</label>
-          <select
-            name="vendor"
-            value={formData.vendor}
-            onChange={handleChange}
-            required
-            className="w-full p-2 border rounded mb-4"
-          >
-            <option value="">Select a Vendor</option>
-            {vendors.map((vendor) => (
-              <option key={vendor._id} value={vendor._id}>
-                {vendor.name}
-              </option>
-            ))}
-          </select>
+            {/* Vendor Dropdown */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Vendor
+              </label>
+              <select
+                name="vendor"
+                value={formData.vendor}
+                onChange={handleChange}
+                className="w-full border-gray-300 rounded-lg p-2 focus:ring-green-500 focus:border-green-500"
+              >
+                <option value="">Select a Vendor</option>
+                {vendors.map((vendor) => (
+                  <option key={vendor._id} value={vendor._id}>
+                    {vendor.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          {/* Product Selection */}
-          <label className="block mb-2">Products:</label>
-          {products.map((product) => (
-            <div key={product._id} className="flex items-center mb-2">
+            {/* Products Dropdown with Quantity */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Product
+              </label>
+              <select
+                name="product"
+                value={formData.product.product}
+                onChange={handleChange}
+                className="w-full border-gray-300 rounded-lg p-2 focus:ring-green-500 focus:border-green-500"
+              >
+                <option value="">Select a Product</option>
+                {products.map((product) => (
+                  <option key={product._id} value={product._id}>
+                    {product.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Quantity Input */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Quantity
+              </label>
               <input
                 type="number"
-                min="1"
-                placeholder="Quantity"
-                className="border p-2 mr-2 w-20"
-                onChange={(e) =>
-                  handleProductChange(product._id, e.target.value)
-                }
+                min="0"
+                placeholder="Qty"
+                className="w-full border border-gray-300 p-2 rounded-md"
+                value={formData.product.quantity}
+                onChange={handleQuantityChange}
               />
-              <span>{product.name}</span>
             </div>
-          ))}
+            {/* Total Amount */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Total Amount (₹)
+              </label>
+              <div className="w-full border-gray-300 rounded-lg p-2 bg-gray-100">
+                ₹{calculateTotalAmount()}
+              </div>
+            </div>
 
-          {/* Total Amount */}
-          <label className="block mb-2">Total Amount (₹):</label>
-          <input
-            type="number"
-            name="totalAmount"
-            value={formData.totalAmount}
-            onChange={handleChange}
-            required
-            className="w-full p-2 border rounded mb-4"
-          />
-
-          {/* Collected Amount */}
-          <label className="block mb-2">Collected Amount (₹):</label>
-          <input
-            type="number"
-            name="collectedAmount"
-            value={formData.collectedAmount}
-            onChange={handleChange}
-            className="w-full p-2 border rounded mb-4"
-          />
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-          >
-            Submit Order
-          </button>
-        </form>
+            {/* Submit */}
+            <div className="pt-4">
+              <button
+                type="submit"
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200"
+              >
+                Submit Order
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

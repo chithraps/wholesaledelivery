@@ -28,7 +28,7 @@ export async function DELETE(request, { params }) {
     const s3Key = product.image;
 
    
-    const bucketName = "booksimagefiles";
+    const bucketName = "warehousemanage";
 
     
     const deleteParams = {

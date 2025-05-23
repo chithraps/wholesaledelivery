@@ -12,25 +12,31 @@ const OrdersPage = () => {
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const limit = 5;
+
   const router = useRouter();
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const response = await axios.get("/api/admin/order");
-        if (response.status === 200) {
-          setOrders(response.data);
-        }
-      } catch (error) {
-        console.error("Error fetching orders:", error);
-        toast.error("Failed to fetch orders");
-      } finally {
-        setLoading(false);
+  const fetchOrders = async (page = 1) => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`/api/admin/order?page=${page}&limit=${limit}`);
+      if (response.status === 200) {
+        setOrders(response.data.orders);
+        setTotalPages(response.data.totalPages);
       }
-    };
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+      toast.error("Failed to fetch orders");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchOrders();
-  }, []);
+  useEffect(() => {
+    fetchOrders(currentPage);
+  }, [currentPage]);
 
   const handleDelete = async (orderId) => {
     toast.info(
@@ -41,12 +47,10 @@ const OrdersPage = () => {
             className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
             onClick={async () => {
               try {
-                const response = await axios.delete(
-                  `/api/admin/order/${orderId}`
-                );
+                const response = await axios.delete(`/api/admin/order/${orderId}`);
                 if (response.status === 200) {
                   toast.success("Order deleted successfully");
-                  setOrders(orders.filter((order) => order._id !== orderId));
+                  fetchOrders(currentPage); // Refresh orders
                 }
               } catch (error) {
                 console.error("Error deleting order:", error);
@@ -67,6 +71,7 @@ const OrdersPage = () => {
       { autoClose: false, closeOnClick: false }
     );
   };
+
   const handleUpdateClick = (order) => {
     setSelectedOrder(order);
     setIsModalOpen(true);
@@ -78,81 +83,100 @@ const OrdersPage = () => {
   };
 
   const handleOrderUpdate = (updatedOrder) => {
-    setOrders(
-      orders.map((order) =>
-        order._id === updatedOrder._id ? updatedOrder : order
-      )
+    setOrders((prevOrders) =>
+      prevOrders.map((order) => (order._id === updatedOrder._id ? updatedOrder : order))
     );
   };
 
-  if (loading) return <p>Loading orders...</p>;
+  if (loading) return <p className="text-center mt-10">Loading orders...</p>;
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
+    <div className="min-h-screen bg-gray-50 flex">
       <AdminNavbar />
       <ToastContainer />
-      <div className="flex-1 p-6 ml-[250px]">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Orders List</h2>
+      <div className="flex-1 p-8 ml-[250px]">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-semibold text-gray-800">Orders</h2>
           <button
             onClick={() => router.push("/admin/createOrder")}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-5 py-2 rounded-lg transition duration-200"
           >
-            Create Order
+            + Create Order
           </button>
         </div>
 
         {orders.length === 0 ? (
-          <p className="text-center text-gray-500">No orders found</p>
+          <div className="text-center text-gray-500 mt-20 text-lg">No orders found.</div>
         ) : (
-          <table className="min-w-full border-collapse border border-gray-300">
-            <thead>
-              <tr className="bg-gray-200">
-                <th className="border p-2">Order ID</th>
-                <th className="border p-2">Truck Driver</th>
-                <th className="border p-2">Vendor</th>
-                <th className="border p-2">Products</th>
-                <th className="border p-2">Total Amount</th>
-                <th className="border p-2">Status</th>
-                <th className="border p-2">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {orders.map((order) => (
-                <tr key={order._id} className="border-b">
-                  <td className="border p-2">{order._id}</td>
-                  <td className="border p-2">
-                    {order.truckDriver?.name || "N/A"}
-                  </td>
-                  <td className="border p-2">{order.vendor?.name || "N/A"}</td>
-                  <td className="border p-2">
-                    {order.products.map((item) => (
-                      <div key={item.product._id}>
-                        {item.product.name} (x{item.quantity})
-                      </div>
-                    ))}
-                  </td>
-                  <td className="border p-2">₹{order.totalAmount}</td>
-                  <td className="border p-2">{order.status}</td>
-                  <td className="border p-2 flex space-x-2">
-                    <button
-                      onClick={() => handleUpdateClick(order)}
-                      className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
-                    >
-                      Update
-                    </button>
-                    <button
-                      onClick={() => handleDelete(order._id)}
-                      className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
+          <>
+            <div className="overflow-x-auto shadow rounded-lg border border-gray-200 bg-white">
+              <table className="min-w-full text-sm text-left">
+                <thead className="bg-gray-100 text-gray-700 text-xs uppercase">
+                  <tr>
+                    <th className="px-6 py-4">Order ID</th>
+                    <th className="px-6 py-4">Truck Driver</th>
+                    <th className="px-6 py-4">Vendor</th>
+                    <th className="px-6 py-4">Products</th>
+                    <th className="px-6 py-4">Total</th>
+                    <th className="px-6 py-4">Status</th>
+                    <th className="px-6 py-4">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders.map((order, idx) => (
+                    <tr key={order._id} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                      <td className="px-6 py-4 font-medium text-gray-900">{order._id}</td>
+                      <td className="px-6 py-4">{order.truckDriver?.name || "N/A"}</td>
+                      <td className="px-6 py-4">{order.vendor?.name || "N/A"}</td>
+                      <td className="px-6 py-4 text-gray-700 text-sm">
+                        {order.products.map((p, i) => (
+                          <div key={i}>
+                            {p.product?.name}{" "}
+                            <span className="text-xs text-gray-500">(x{p.quantity})</span>
+                          </div>
+                        ))}
+                      </td>
+                      <td className="px-6 py-4 text-green-600 font-semibold">₹{order.totalAmount}</td>
+                      <td className="px-6 py-4 capitalize">{order.status}</td>
+                      <td className="px-6 py-4 flex flex-wrap gap-2">
+                        <button
+                          onClick={() => handleUpdateClick(order)}
+                          className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md text-sm"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(order._id)}
+                          className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination Controls */}
+            <div className="flex justify-center mt-6 gap-2">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`px-3 py-1 border rounded ${
+                    currentPage === page
+                      ? "bg-indigo-600 text-white"
+                      : "bg-white text-gray-800 hover:bg-gray-200"
+                  }`}
+                >
+                  {page}
+                </button>
               ))}
-            </tbody>
-          </table>
+            </div>
+          </>
         )}
+
         <EditOrderModal
           isOpen={isModalOpen}
           onClose={handleModalClose}

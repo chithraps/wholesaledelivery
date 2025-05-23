@@ -12,7 +12,7 @@ export async function POST(req) {
     console.log(" Admin email", email);
 
     const admin = await Admin.findOne({ email });
-
+    console.log("admin object ",admin)
     if (!admin) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
