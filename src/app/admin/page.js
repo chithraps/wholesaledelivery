@@ -189,7 +189,7 @@ const LoginPage = () => {
           {/* Footer */}
           <div className="bg-gray-50 px-8 py-4 border-t border-gray-200">
             <p className="text-center text-sm text-gray-600">
-              Don't have an account?{' '}
+              Do not have an account?{' '}
               <button
                 onClick={() => router.push("/admin/signup")}
                 className="font-medium text-blue-600 hover:text-blue-500 hover:underline"
