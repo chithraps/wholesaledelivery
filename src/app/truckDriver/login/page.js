@@ -189,7 +189,7 @@ export default function Home() {
                 </div>
                 <div className="relative flex justify-center text-sm">
                   <span className="px-2 bg-white text-gray-500">
-                    Don't have an account?
+                    Do not have an account?
                   </span>
                 </div>
               </div>
