@@ -21,7 +21,9 @@ const OrdersPage = () => {
   const fetchOrders = async (page = 1) => {
     setLoading(true);
     try {
-      const response = await axios.get(`/api/admin/order?page=${page}&limit=${limit}`);
+      const response = await axios.get(
+        `/api/admin/order?page=${page}&limit=${limit}`
+      );
       if (response.status === 200) {
         setOrders(response.data.orders);
         setTotalPages(response.data.totalPages);
@@ -47,7 +49,9 @@ const OrdersPage = () => {
             className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
             onClick={async () => {
               try {
-                const response = await axios.delete(`/api/admin/order/${orderId}`);
+                const response = await axios.delete(
+                  `/api/admin/order/${orderId}`
+                );
                 if (response.status === 200) {
                   toast.success("Order deleted successfully");
                   fetchOrders(currentPage); // Refresh orders
@@ -84,7 +88,9 @@ const OrdersPage = () => {
 
   const handleOrderUpdate = (updatedOrder) => {
     setOrders((prevOrders) =>
-      prevOrders.map((order) => (order._id === updatedOrder._id ? updatedOrder : order))
+      prevOrders.map((order) =>
+        order._id === updatedOrder._id ? updatedOrder : order
+      )
     );
   };
 
@@ -106,7 +112,9 @@ const OrdersPage = () => {
         </div>
 
         {orders.length === 0 ? (
-          <div className="text-center text-gray-500 mt-20 text-lg">No orders found.</div>
+          <div className="text-center text-gray-500 mt-20 text-lg">
+            No orders found.
+          </div>
         ) : (
           <>
             <div className="overflow-x-auto shadow rounded-lg border border-gray-200 bg-white">
@@ -124,19 +132,34 @@ const OrdersPage = () => {
                 </thead>
                 <tbody>
                   {orders.map((order, idx) => (
-                    <tr key={order._id} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                      <td className="px-6 py-4 font-medium text-gray-900">{order._id}</td>
-                      <td className="px-6 py-4">{order.truckDriver?.name || "N/A"}</td>
-                      <td className="px-6 py-4">{order.vendor?.name || "N/A"}</td>
-                      <td className="px-6 py-4 text-gray-700 text-sm">
-                        {order.products.map((p, i) => (
-                          <div key={i}>
-                            {p.product?.name}{" "}
-                            <span className="text-xs text-gray-500">(x{p.quantity})</span>
-                          </div>
-                        ))}
+                    <tr
+                      key={order._id}
+                      className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                    >
+                      <td className="px-6 py-4 font-medium text-gray-900">
+                        {order._id}
                       </td>
-                      <td className="px-6 py-4 text-green-600 font-semibold">₹{order.totalAmount}</td>
+                      <td className="px-6 py-4">
+                        {order.truckDriver?.name || "N/A"}
+                      </td>
+                      <td className="px-6 py-4">
+                        {order.vendor?.name || "N/A"}
+                      </td>
+                      <td className="px-6 py-4 text-gray-700 text-sm">
+                        {order.product ? (
+                          <div>
+                            {order.product.product?.name}{" "}
+                            <span className="text-xs text-gray-500">
+                              (x{order.product.quantity})
+                            </span>
+                          </div>
+                        ) : (
+                          "No product"
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-green-600 font-semibold">
+                        ₹{order.totalAmount}
+                      </td>
                       <td className="px-6 py-4 capitalize">{order.status}</td>
                       <td className="px-6 py-4 flex flex-wrap gap-2">
                         <button
@@ -160,19 +183,21 @@ const OrdersPage = () => {
 
             {/* Pagination Controls */}
             <div className="flex justify-center mt-6 gap-2">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className={`px-3 py-1 border rounded ${
-                    currentPage === page
-                      ? "bg-indigo-600 text-white"
-                      : "bg-white text-gray-800 hover:bg-gray-200"
-                  }`}
-                >
-                  {page}
-                </button>
-              ))}
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (page) => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`px-3 py-1 border rounded ${
+                      currentPage === page
+                        ? "bg-indigo-600 text-white"
+                        : "bg-white text-gray-800 hover:bg-gray-200"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                )
+              )}
             </div>
           </>
         )}

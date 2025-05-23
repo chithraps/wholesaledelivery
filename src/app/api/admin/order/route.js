@@ -17,7 +17,7 @@ export async function GET(req) {
       .limit(limit)
       .populate("truckDriver", "name mobileNumber")
       .populate("vendor", "name location contact")
-      .populate("products.product", "name price category");
+      .populate("product.product", "name price category");
 
     return NextResponse.json({ orders, totalOrders, currentPage: page }, { status: 200 });
   } catch (error) {

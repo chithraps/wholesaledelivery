@@ -6,7 +6,7 @@ export async function PUT(req, { params }) {
   await connect();
   console.log("in put request");
   const { status } = await req.json();
-  const { id } = params;
+  const { id } = await params;
   console.log(id, " ", status);
   try {
     if (!id || !status) {
@@ -16,16 +16,21 @@ export async function PUT(req, { params }) {
       );
     }
 
-    const order = await Order.findById(id);
-    if (!order) {
-      return NextResponse.json({ message: "Order not found" }, { status: 404 });
+    const updatedOrder = await Order.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true } // Returns the updated document
+    );
+
+    if (!updatedOrder) {
+      return NextResponse.json(
+        { message: "Order not found" },
+        { status: 404 }
+      );
     }
 
-    order.status = status;
-    await order.save();
-
     return NextResponse.json(
-      { message: "Order status updated successfully", order },
+      { message: "Order status updated successfully", order: updatedOrder },
       { status: 200 }
     );
   } catch (error) {
