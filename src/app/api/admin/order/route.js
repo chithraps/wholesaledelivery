@@ -1,5 +1,6 @@
 import { connect } from "@/dbConfig/DbConfig";
 import Vendor from "@/models/Vendor";
+import TruckDriver from "@/models/TruckDriver";
 import Order from "@/models/Order";
 import Product from "@/models/Product";
 import { NextResponse } from "next/server";
