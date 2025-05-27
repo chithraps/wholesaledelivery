@@ -1,10 +1,11 @@
 import { connect } from "@/dbConfig/DbConfig";
+import Vendor from "@/models/Vendor";
 import Order from "@/models/Order";
 import Product from "@/models/Product";
-import Vendor from "@/models/Vendor"
 import { NextResponse } from "next/server";
 
 export async function GET(req) {
+  
   await connect();
   try {
     const { searchParams } = new URL(req.url);
@@ -19,7 +20,7 @@ export async function GET(req) {
       .populate("truckDriver", "name mobileNumber")
       .populate("vendor", "name location contact")
       .populate("product.product", "name price category");
-
+    console.log("orders ",orders)
     return NextResponse.json({ orders, totalOrders, currentPage: page,totalPages: Math.ceil(totalOrders / limit) }, { status: 200 });
   } catch (error) {
     console.log(error);
