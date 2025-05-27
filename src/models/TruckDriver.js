@@ -9,4 +9,5 @@ const truckDriverSchema = new mongoose.Schema({
   assignedVendors: [{ type: mongoose.Schema.Types.ObjectId, ref: "Vendor" }]
 },{ timestamps: true })
 
-module.exports = mongoose.models.TruckDriver || mongoose.model("TruckDriver", truckDriverSchema);
+const TruckDriver = mongoose.models.TruckDriver || mongoose.model("TruckDriver", truckDriverSchema);
+export default TruckDriver

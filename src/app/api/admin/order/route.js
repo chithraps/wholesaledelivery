@@ -1,6 +1,7 @@
 import { connect } from "@/dbConfig/DbConfig";
 import Order from "@/models/Order";
 import Product from "@/models/Product";
+import Vendor from "@/models/Vendor"
 import { NextResponse } from "next/server";
 
 export async function GET(req) {

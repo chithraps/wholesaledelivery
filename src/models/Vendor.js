@@ -7,4 +7,5 @@ const vendorSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true },
 }, { timestamps: true });
 
-module.exports = mongoose.models.Vendor || mongoose.model("Vendor", vendorSchema);
+const Vendor = mongoose.models.Vendor || mongoose.model("Vendor", vendorSchema);
+export default Vendor;
