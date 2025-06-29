@@ -6,6 +6,7 @@ export async function GET(req) {
   await connect();
 
   try {
+    console.log("in get method")
     const { searchParams } = new URL(req.url);
     const truckDriverId = searchParams.get("truckDriverId");
     const page = parseInt(searchParams.get("page")) || 1;
@@ -19,7 +20,7 @@ export async function GET(req) {
 
     const orders = await Order.find({ truckDriver: truckDriverId })
       .populate("vendor", "name")
-      .populate("products.product", "name price")
+      .populate("product.product", "name price")
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit);
