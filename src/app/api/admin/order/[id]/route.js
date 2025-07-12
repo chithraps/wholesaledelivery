@@ -19,7 +19,7 @@ export async function PUT(req, { params }) {
     const updatedOrder = await Order.findByIdAndUpdate(
       id,
       { status },
-      { new: true } // Returns the updated document
+      { new: true } 
     );
 
     if (!updatedOrder) {
@@ -28,6 +28,7 @@ export async function PUT(req, { params }) {
         { status: 404 }
       );
     }
+    console.log("updated order ",updatedOrder)
 
     return NextResponse.json(
       { message: "Order status updated successfully", order: updatedOrder },

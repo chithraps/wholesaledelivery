@@ -25,7 +25,7 @@ export default function TruckDriverOrdersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const truckDriver = useSelector((state) => state.truckDriver.truckDriver);
-
+  console.log("in page.js")
   useEffect(() => {
     const fetchOrders = async () => {
       if (!truckDriver?._id) return;

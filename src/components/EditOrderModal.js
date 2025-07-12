@@ -23,7 +23,7 @@ const EditOrderModal = ({ isOpen, onClose, order, onUpdate }) => {
       const response = await axios.put(`/api/admin/order/${order._id}`, { status });
       if (response.status === 200) {
         toast.success("Order status updated successfully");
-        onUpdate(response.data);
+        onUpdate(response.data.order);
         onClose();
       }
     } catch (error) {

@@ -1,5 +1,6 @@
 import { connect } from "@/dbConfig/DbConfig";
 import Vendor from "@/models/Vendor";
+import Product from "@/models/Product";
 import { NextResponse } from "next/server";
 
 export async function PUT(request, { params }) {
@@ -40,5 +41,21 @@ export async function DELETE(request, { params }) {
     return NextResponse.json({ message: "Vendor deleted successfully" });
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+export async function GET(req, { params }) {
+  await connect();
+  const vendorId = params.id;
+  console.log("in get method ",vendorId)
+  try {
+    const vendor = await Vendor.findById(vendorId).populate("products");
+    if (!vendor) {
+      return new Response(JSON.stringify({ error: "Vendor not found" }), { status: 404 });
+    }
+
+    return new Response(JSON.stringify({ products: vendor.products }), { status: 200 });
+  } catch (error) {
+    console.error("Failed to fetch vendor products", error);
+    return new Response(JSON.stringify({ error: "Internal Server Error" }), { status: 500 });
   }
 }

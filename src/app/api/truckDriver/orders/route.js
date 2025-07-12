@@ -10,19 +10,21 @@ export async function POST(request) {
     await connect();
 
     const body = await request.json();
-    const { vendor, truckDriver, products, totalAmount } = body;
+    const { vendor, truckDriver, products, totalAmount } = body;   
 
     
-    if (!vendor || !truckDriver || !Array.isArray(products) || products.length === 0) {
+     
+    if (!vendor || !truckDriver || !Array.isArray(products) || products.length === 0 || !totalAmount) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
     const order = new Order({
       vendor,
       truckDriver,
-      products,
+      products, 
       totalAmount,
     });
+
 
     await order.save();
 

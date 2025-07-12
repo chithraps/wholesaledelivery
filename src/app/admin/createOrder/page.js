@@ -28,7 +28,7 @@ const CreateOrder = () => {
         const response = await axios.get("/api/admin/orderData");
         setTruckDrivers(response.data.truckDrivers);
         setVendors(response.data.vendors);
-        setProducts(response.data.products);
+        
       } catch (error) {
         console.error("Error fetching data:", error);
         toast.error("Failed to fetch data");
@@ -49,7 +49,29 @@ const CreateOrder = () => {
       setFormData({ ...formData, [name]: value });
     }
   };
+  const handleVendorChange = async (e) => {
+    const selectedVendorId = e.target.value;
+    setFormData({
+      ...formData,
+      vendor: selectedVendorId,
+      product: { product: "", quantity: 0 },
+    });
 
+    if (!selectedVendorId) {
+      setProducts([]);
+      return;
+    }
+
+    try {
+      const res = await axios.get(`/api/admin/vendors/${selectedVendorId}`);
+      if (res.status === 200) {
+        setProducts(res.data.products);
+      }
+    } catch (error) {
+      console.error("Error fetching vendor's products", error);
+      toast.error("Failed to load vendor products");
+    }
+  };
   const calculateTotalAmount = () => {
     const selectedProduct = products.find(
       (prod) => prod._id === formData.product.product
@@ -93,7 +115,7 @@ const CreateOrder = () => {
 
     try {
       const totalAmount = calculateTotalAmount();
-      console.log(" formData ",formData)
+      console.log(" formData ", formData);
       await axios.post("/api/admin/order", {
         ...formData,
         totalAmount,
@@ -145,7 +167,7 @@ const CreateOrder = () => {
               <select
                 name="vendor"
                 value={formData.vendor}
-                onChange={handleChange}
+                onChange={handleVendorChange}
                 className="w-full border-gray-300 rounded-lg p-2 focus:ring-green-500 focus:border-green-500"
               >
                 <option value="">Select a Vendor</option>

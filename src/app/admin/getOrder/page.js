@@ -87,12 +87,14 @@ const OrdersPage = () => {
   };
 
   const handleOrderUpdate = (updatedOrder) => {
-    setOrders((prevOrders) =>
-      prevOrders.map((order) =>
-        order._id === updatedOrder._id ? updatedOrder : order
-      )
-    );
-  };
+  if (!updatedOrder || !updatedOrder._id) return;
+
+  setOrders((prevOrders) =>
+    prevOrders.map((order) =>
+      order._id === updatedOrder._id ? updatedOrder : order
+    )
+  );
+};
 
   if (loading) return <p className="text-center mt-10">Loading orders...</p>;
 
@@ -146,15 +148,19 @@ const OrdersPage = () => {
                         {order.vendor?.name || "N/A"}
                       </td>
                       <td className="px-6 py-4 text-gray-700 text-sm">
-                        {order.product ? (
-                          <div>
-                            {order.product.product?.name}{" "}
-                            <span className="text-xs text-gray-500">
-                              (x{order.product.quantity})
-                            </span>
-                          </div>
+                        {order.products && order.products.length > 0 ? (
+                          <ul className="list-disc pl-4">
+                            {order.products.map((item) => (
+                              <li key={item.product._id}>
+                                {item.product?.name}{" "}
+                                <span className="text-xs text-gray-500">
+                                  (x{item.quantity})
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
                         ) : (
-                          "No product"
+                          "No products"
                         )}
                       </td>
                       <td className="px-6 py-4 text-green-600 font-semibold">

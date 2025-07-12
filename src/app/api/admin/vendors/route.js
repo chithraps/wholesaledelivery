@@ -1,11 +1,12 @@
 import { connect } from "@/dbConfig/DbConfig";
 import Vendor from "@/models/Vendor";
+import Product from "@/models/Product";
 import { NextResponse } from "next/server";
 
 export async function POST(request) {
   try {
     await connect();
-    const { name, location, contact, email } = await request.json();
+    const { name, location, contact, email,products  } = await request.json();
     console.log("name is ", name);
     if (!name || !location || !contact || !email) {
       return NextResponse.json(
@@ -13,7 +14,7 @@ export async function POST(request) {
         { status: 404 }
       );
     }
-    const newVendor = new Vendor({ name, location, contact, email });
+    const newVendor = new Vendor({ name, location, contact, email,products });
     await newVendor.save();
     return NextResponse.json({
       message: "Vendor created successfully",
@@ -37,7 +38,7 @@ export async function GET(request) {
 
     const total = await Vendor.countDocuments();
 
-    const vendors = await Vendor.find().skip(skip).limit(limit);
+    const vendors = await Vendor.find().populate("products").skip(skip).limit(limit);
 
     return NextResponse.json({
       vendors,

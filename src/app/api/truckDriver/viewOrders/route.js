@@ -23,7 +23,7 @@ export async function GET(req) {
 
     const orders = await Order.find({ truckDriver: truckDriverId })
       .populate("vendor", "name")
-      .populate("product.product", "name price")
+      .populate("products.product", "name price")
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit);

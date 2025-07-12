@@ -10,26 +10,46 @@ const OrderManagementPage = () => {
   const [vendors, setVendors] = useState([]);
   const [products, setProducts] = useState([]);
   const [selectedVendor, setSelectedVendor] = useState("");
-  const [selectedProduct, setSelectedProduct] = useState("");
+  const [selectedProduct, setSelectedProduct] = useState([]);
   const [cart, setCart] = useState([]);
   const [quantities, setQuantities] = useState({});
   const truckDriver = useSelector((state) => state.truckDriver.truckDriver);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchVendors = async () => {
       try {
-        const [vendorsRes, productsRes] = await Promise.all([
-          axios.get("/api/truckDriver/getVendors"),
-          axios.get("/api/truckDriver/getProducts"),
-        ]);
-        setVendors(vendorsRes.data);
-        setProducts(productsRes.data);
+        const res = await axios.get("/api/truckDriver/getVendors");
+        setVendors(res.data);
       } catch (error) {
-        toast.error("Failed to load data");
+        toast.error("Failed to load vendors");
       }
     };
-    fetchData();
+
+    fetchVendors();
   }, []);
+  const handleMultipleSelect = (e) => {
+    const selectedOptions = Array.from(
+      e.target.selectedOptions,
+      (option) => option.value
+    );
+    setSelectedProduct(selectedOptions);
+  };
+  const handleVendorChange = async (e) => {
+    const vendorId = e.target.value;
+    setSelectedVendor(vendorId);
+    setSelectedProduct([]);
+    setQuantities({});
+    setProducts([]);
+
+    if (vendorId) {
+      try {
+        const res = await axios.get(`/api/admin/vendors/${vendorId}`);
+        setProducts(res.data.products);
+      } catch (error) {
+        toast.error("Failed to load products for selected vendor");
+      }
+    }
+  };
 
   const handleAddToCart = (product) => {
     const quantity = parseInt(quantities[product._id] || 0);
@@ -109,19 +129,25 @@ const OrderManagementPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       <TdNavbar />
       <ToastContainer position="top-right" autoClose={3000} />
-      
+
       <div className="ml-0 md:ml-[250px] p-6 transition-all duration-300">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
             <div>
-              <h2 className="text-3xl font-bold text-gray-800">Create New Order</h2>
-              <p className="text-gray-600 mt-1">Add products to your delivery order</p>
+              <h2 className="text-3xl font-bold text-gray-800">
+                Create New Order
+              </h2>
+              <p className="text-gray-600 mt-1">
+                Add products to your delivery order
+              </p>
             </div>
             {cart.length > 0 && (
               <div className="mt-4 md:mt-0 flex items-center bg-blue-100 text-blue-800 px-4 py-2 rounded-full">
                 <ShoppingCart className="mr-2" size={18} />
-                <span className="font-medium">{cart.length} {cart.length === 1 ? 'item' : 'items'} in cart</span>
+                <span className="font-medium">
+                  {cart.length} {cart.length === 1 ? "item" : "items"} in cart
+                </span>
               </div>
             )}
           </div>
@@ -131,8 +157,10 @@ const OrderManagementPage = () => {
             {/* Product Selection */}
             <div className="lg:col-span-2 space-y-6">
               <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Select Products</h3>
-                
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                  Select Products
+                </h3>
+
                 {/* Vendor Selection */}
                 <div className="mb-6">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -141,11 +169,7 @@ const OrderManagementPage = () => {
                   </label>
                   <select
                     value={selectedVendor}
-                    onChange={(e) => {
-                      setSelectedVendor(e.target.value);
-                      setSelectedProduct("");
-                      setQuantities({});
-                    }}
+                    onChange={handleVendorChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                   >
                     <option value="">-- Select Vendor --</option>
@@ -165,53 +189,78 @@ const OrderManagementPage = () => {
                         Product
                         <span className="text-red-500 ml-1">*</span>
                       </label>
-                      <select
-                        value={selectedProduct}
-                        onChange={(e) => setSelectedProduct(e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                      >
-                        <option value="">-- Select Product --</option>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {products.map((product) => (
-                          <option key={product._id} value={product._id}>
-                            {product.name} - ₹{product.price.toFixed(2)}
-                          </option>
+                          <div
+                            key={product._id}
+                            className="flex items-start gap-2"
+                          >
+                            <input
+                              type="checkbox"
+                              id={product._id}
+                              checked={selectedProduct.includes(product._id)}
+                              onChange={(e) => {
+                                const isChecked = e.target.checked;
+                                setSelectedProduct((prevSelected) =>
+                                  isChecked
+                                    ? [...prevSelected, product._id]
+                                    : prevSelected.filter(
+                                        (id) => id !== product._id
+                                      )
+                                );
+                              }}
+                            />
+                            <label
+                              htmlFor={product._id}
+                              className="text-sm text-gray-700"
+                            >
+                              {product.name} - ₹{product.price.toFixed(2)}
+                            </label>
+                          </div>
                         ))}
-                      </select>
+                      </div>
                     </div>
 
                     {/* Quantity Input */}
-                    {selectedProduct && (
-                      <div>
+                    {selectedProduct.length > 0 && (
+                      <div className="space-y-4">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Quantity
-                          <span className="text-red-500 ml-1">*</span>
+                          Quantity <span className="text-red-500">*</span>
                         </label>
-                        <div className="flex gap-2">
-                          <input
-                            type="number"
-                            min="1"
-                            placeholder="Enter quantity"
-                            value={quantities[selectedProduct] || ""}
-                            onChange={(e) =>
-                              setQuantities({
-                                ...quantities,
-                                [selectedProduct]: e.target.value,
-                              })
-                            }
-                            className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                          />
-                          <button
-                            onClick={() =>
-                              handleAddToCart(
-                                products.find((p) => p._id === selectedProduct)
-                              )
-                            }
-                            className="flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg transition whitespace-nowrap"
-                          >
-                            <PackagePlus className="mr-2" size={18} />
-                            Add to Cart
-                          </button>
-                        </div>
+                        {selectedProduct.map((productId) => {
+                          const product = products.find(
+                            (p) => p._id === productId
+                          );
+                          if (!product) return null;
+
+                          return (
+                            <div
+                              key={productId}
+                              className="flex items-center gap-2"
+                            >
+                              <input
+                                type="number"
+                                min="1"
+                                placeholder={`Qty for ${product.name}`}
+                                value={quantities[productId] || ""}
+                                onChange={(e) =>
+                                  setQuantities({
+                                    ...quantities,
+                                    [productId]: e.target.value,
+                                  })
+                                }
+                                className="w-32 px-3 py-2 border border-gray-300 rounded-lg"
+                              />
+                              <button
+                                onClick={() => handleAddToCart(product)}
+                                className="flex items-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+                              >
+                                <PackagePlus className="mr-2" size={18} />
+                                Add product
+                              </button>
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </>
@@ -255,7 +304,9 @@ const OrderManagementPage = () => {
                           </div>
                           <div className="flex items-center">
                             <button
-                              onClick={() => handleQuantityChange(item.product._id, -1)}
+                              onClick={() =>
+                                handleQuantityChange(item.product._id, -1)
+                              }
                               className="p-1 text-gray-500 hover:text-blue-600 transition"
                               disabled={item.quantity <= 1}
                             >
@@ -265,13 +316,17 @@ const OrderManagementPage = () => {
                               {item.quantity}
                             </span>
                             <button
-                              onClick={() => handleQuantityChange(item.product._id, 1)}
+                              onClick={() =>
+                                handleQuantityChange(item.product._id, 1)
+                              }
                               className="p-1 text-gray-500 hover:text-blue-600 transition"
                             >
                               <Plus size={16} />
                             </button>
                             <button
-                              onClick={() => handleRemoveFromCart(item.product._id)}
+                              onClick={() =>
+                                handleRemoveFromCart(item.product._id)
+                              }
                               className="ml-3 p-1 text-red-500 hover:text-red-600 transition"
                             >
                               <Trash2 size={16} />

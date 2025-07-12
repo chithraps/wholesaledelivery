@@ -12,18 +12,24 @@ const orderSchema = new mongoose.Schema(
       ref: "Vendor",
       required: true,
     },
-    product: {
-      product: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Product",
-        required: true,
+    products: [
+      {
+        product: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Product",
+          required: true,
+        },
+        quantity: {
+          type: Number,
+          required: true,
+        },
       },
-      quantity: { type: Number, required: true },
-    },
-    totalAmount: { type: Number, required: true },    
+    ],
+
+    totalAmount: { type: Number, required: true },
     status: {
       type: String,
-      enum: ["pending", "order placed","shipped","delivered", "cancelled"],
+      enum: ["pending", "order placed", "shipped", "delivered", "cancelled"],
       default: "pending",
     },
     currentLocation: {
@@ -35,4 +41,4 @@ const orderSchema = new mongoose.Schema(
 );
 
 const Order = mongoose.models.Order || mongoose.model("Order", orderSchema);
-export default Order
+export default Order;
