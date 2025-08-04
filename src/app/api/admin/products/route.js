@@ -30,7 +30,7 @@ export async function GET() {
     console.log("in product route")
     await connect();
     const products = await Product.find();
-    const bucketName = "warehousemanage";
+    const bucketName = "herbsonline";
     const productsWithSignedUrls = await Promise.all(
       products.map(async (product) => {
         if (product.image) {

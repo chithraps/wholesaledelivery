@@ -33,7 +33,7 @@ export async function PUT(request, { params }) {
     const buffer = Buffer.from(await imageFile.arrayBuffer());
     const filename = Date.now() + imageFile.name.replaceAll(" ", "_");
     const s3Key = `products/${filename}`;
-    const bucketName = "warehousemanage";
+    const bucketName = "herbsonline";
     const uploadParams = {
       Bucket: bucketName,
       Key: s3Key,

@@ -46,7 +46,7 @@ export async function POST(request) {
     const filename = Date.now() + imageFile.name.replaceAll(" ", "_");
     console.log(filename);
 
-    const bucketName = "warehousemanage";
+    const bucketName = "herbsonline";
     const s3Key = `products/${filename}`;
     console.log("s3Key ", s3Key);
     const uploadParams = {
