@@ -2,6 +2,7 @@
 import AdminNavbar from "@/components/AdminNavbar";
 import axios from "axios";
 import { useEffect, useState } from "react";
+import { getDashboardCountsService } from "@/services/adminService";
 const AdminDashboard = () => {
   const [counts, setCounts] = useState({
     users: 0,
@@ -11,22 +12,13 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch all counts in parallel
+    
     const fetchCounts = async () => {
       try {
-        const [usersRes, vendorsRes, ordersRes] = await Promise.all([
-          axios.get("/api/admin/countUser"),
-          axios.get("/api/admin/countvendor"),
-          axios.get("/api/admin/countOrder"),
-        ]);
-
-        setCounts({
-          users: usersRes.data.count,
-          vendors: vendorsRes.data.count,
-          ordersToday: ordersRes.data.count,
-        });
-      } catch (error) {
-        console.error("Failed to fetch counts:", error);
+        const counts = await getDashboardCountsService();
+        setCounts(counts);
+      } catch (err) {
+        console.error("Failed to fetch counts:", err);
       } finally {
         setLoading(false);
       }
@@ -37,11 +29,14 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex font-sans">
       <AdminNavbar />
-      
+
       <div className="flex-1 ml-[250px] p-8 transition-all">
         <div className="bg-white rounded-lg shadow-md p-6">
           <h2 className="text-3xl font-bold text-blue-700 mb-2">Dashboard</h2>
-          <p className="text-gray-600 text-lg">Welcome to your admin panel! You can manage users, vendors, products, and orders from here.</p>
+          <p className="text-gray-600 text-lg">
+            Welcome to your admin panel! You can manage users, vendors,
+            products, and orders from here.
+          </p>
         </div>
 
         {/* Placeholder for dashboard stats/cards */}

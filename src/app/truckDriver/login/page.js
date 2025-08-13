@@ -3,7 +3,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { loginTruckDriver } from "@/redux/TruckDriverAction";
+import { truckDriverLogin } from "@/services/truckDriverService";
 import axios from "axios";
+import { STATUS_CODES } from "@/Constants/codeStatus";
 
 export default function Home() {
   const [mobile, setMobile] = useState("");
@@ -39,18 +41,21 @@ export default function Home() {
     
     setIsLoading(true);
     try {
-      const response = await axios.post("/api/truckDriver/tdLogin", {
-        mobile,
-        password,
-      });
-      const { token, truckDriver } = response.data;
+    const { data, status, error } = await truckDriverLogin(mobile, password);
+
+    if (!error && status === STATUS_CODES.OK) {
+      const { token, truckDriver } = data;
       dispatch(loginTruckDriver(truckDriver, token));
       router.push("/truckDriver/tdDashboard");
-    } catch (error) {
-      setErrors({ ...errors, form: error.response?.data?.message || "Login failed. Please try again." });
-    } finally {
-      setIsLoading(false);
+    } else {
+      setErrors({
+        ...errors,
+        form: error?.message || "Login failed. Please try again."
+      });
     }
+  } finally {
+    setIsLoading(false);
+  }
   };
 
   return (

@@ -4,6 +4,8 @@ import Order from "@/models/Order";
 import Product from "@/models/Product";
 import Vendor from "@/models/Vendor";
 import TruckDriver from "@/models/TruckDriver";
+import { STATUS_CODES } from "@/Constants/codeStatus";
+
 
 export async function GET(req) {
   await connect();
@@ -14,9 +16,9 @@ export async function GET(req) {
     const truckDriverId = searchParams.get("truckDriverId");
     const page = parseInt(searchParams.get("page")) || 1;
     const limit = parseInt(searchParams.get("limit")) || 2;
-
+    console.log("truckDriverId ",truckDriverId)
     if (!truckDriverId) {
-      return NextResponse.json({ error: "Missing truckDriverId" }, { status: 400 });
+      return NextResponse.json({ error: "Missing truckDriverId" }, { status: STATUS_CODES.BAD_REQUEST });
     }
 
     const totalOrders = await Order.countDocuments({ truckDriver: truckDriverId });
@@ -34,10 +36,10 @@ export async function GET(req) {
         currentPage: page,
         totalPages: Math.ceil(totalOrders / limit),
       },
-      { status: 200 }
+      { status: STATUS_CODES.OK }
     );
   } catch (error) {
     console.error("Error fetching orders:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: STATUS_CODES.INTERNAL_SERVER_ERROR });
   }
 }

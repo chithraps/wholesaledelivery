@@ -2,6 +2,7 @@ import { connect } from "@/dbConfig/DbConfig";
 import Product from "@/models/Product";
 import { NextResponse } from "next/server";
 import { S3Client, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { STATUS_CODES } from "@/Constants/codeStatus";
 
 const s3 = new S3Client({
   region: process.env.S3_BUCKET_REGION,
@@ -21,7 +22,7 @@ export async function DELETE(request, { params }) {
     const product = await Product.findById(id);
 
     if (!product) {
-      return NextResponse.json({ success: false, message: "Product not found" }, { status: 404 });
+      return NextResponse.json({ success: false, message: "Product not found" }, { status: STATUS_CODES.NOT_FOUND });
     }
 
     
@@ -42,10 +43,10 @@ export async function DELETE(request, { params }) {
    
     await Product.findByIdAndDelete(id);
 
-    return NextResponse.json({ success: true, message: "Product and image deleted successfully" }, { status: 200 });
+    return NextResponse.json({ success: true, message: "Product and image deleted successfully" }, { status: STATUS_CODES.OK });
 
   } catch (error) {
     console.error("Error deleting product:", error);
-    return NextResponse.json({ success: false, message: "Failed to delete product" }, { status: 500 });
+    return NextResponse.json({ success: false, message: "Failed to delete product" }, { status: STATUS_CODES.INTERNAL_SERVER_ERROR });
   }
 }

@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { loginAdmin } from "@/redux/AdminAction";
+import { adminLogin } from "@/services/adminService";
 import { useDispatch } from "react-redux";
 import axios from "axios";
 import { Lock, Mail, AlertCircle } from "lucide-react";
@@ -41,23 +42,27 @@ const LoginPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
-    
+
     setIsLoading(true);
     try {
-      const response = await axios.post("/api/admin/login", {
-        email,
-        password,
-      });
-      const { admin } = response.data;
-      dispatch(loginAdmin(admin));
-      router.push("/admin/dashboard");
-    } catch (error) {
-      console.log(error);
-      if (error.response) {
-        setErrors({ ...errors, apiError: error.response.data.message });
-      } else {
-        setErrors({ ...errors, apiError: "Something went wrong. Try again later." });
+      const { data, error } = await adminLogin(email, password);
+
+      if (error) {
+        setErrors((prev) => ({
+          ...prev,
+          apiError: error.message || "Login failed",
+        }));
+        return;
       }
+
+      dispatch(loginAdmin(data.admin));
+      router.push("/admin/dashboard");
+    } catch (err) {
+      console.error(err);
+      setErrors((prev) => ({
+        ...prev,
+        apiError: "Something went wrong. Try again later.",
+      }));
     } finally {
       setIsLoading(false);
     }
@@ -100,7 +105,9 @@ const LoginPage = () => {
                     className={`w-full pl-10 pr-4 py-3 border ${
                       errors.email ? "border-red-400" : "border-gray-300"
                     } rounded-lg focus:outline-none focus:ring-2 ${
-                      errors.email ? "focus:ring-red-300" : "focus:ring-blue-300"
+                      errors.email
+                        ? "focus:ring-red-300"
+                        : "focus:ring-blue-300"
                     } transition placeholder-gray-400`}
                     placeholder="admin@example.com"
                     value={email}
@@ -129,7 +136,9 @@ const LoginPage = () => {
                     className={`w-full pl-10 pr-4 py-3 border ${
                       errors.password ? "border-red-400" : "border-gray-300"
                     } rounded-lg focus:outline-none focus:ring-2 ${
-                      errors.password ? "focus:ring-red-300" : "focus:ring-blue-300"
+                      errors.password
+                        ? "focus:ring-red-300"
+                        : "focus:ring-blue-300"
                     } transition placeholder-gray-400`}
                     placeholder="••••••••"
                     value={password}
@@ -153,12 +162,13 @@ const LoginPage = () => {
                     type="checkbox"
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
-                  <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+                  <label
+                    htmlFor="remember-me"
+                    className="ml-2 block text-sm text-gray-700"
+                  >
                     Remember me
                   </label>
                 </div>
-
-                
               </div>
 
               {/* Submit Button */}
@@ -167,20 +177,36 @@ const LoginPage = () => {
                 disabled={isLoading}
                 className={`w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-white font-medium ${
                   isLoading
-                    ? 'bg-blue-400 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600'
+                    ? "bg-blue-400 cursor-not-allowed"
+                    : "bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600"
                 } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition`}
               >
                 {isLoading ? (
                   <>
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg
+                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
                     </svg>
                     Signing in...
                   </>
                 ) : (
-                  'Sign In'
+                  "Sign In"
                 )}
               </button>
             </form>
@@ -189,7 +215,7 @@ const LoginPage = () => {
           {/* Footer */}
           <div className="bg-gray-50 px-8 py-4 border-t border-gray-200">
             <p className="text-center text-sm text-gray-600">
-              Do not have an account?{' '}
+              Do not have an account?{" "}
               <button
                 onClick={() => router.push("/admin/signup")}
                 className="font-medium text-blue-600 hover:text-blue-500 hover:underline"

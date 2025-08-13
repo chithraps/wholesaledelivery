@@ -52,21 +52,20 @@ const SignupPage = () => {
       setLoading(true);
       setErrors({});
       try {
-        const response = await axios.post("/api/admin/signup", formData);
-        if (response.status === 201) {
+        const { data, status, error } = await adminSignup(formData);
+
+        if (!error && status === StatusCodes.CREATED) {
           toast.success("Information added successfully!", {
-            onClose: () => {
-              router.push("/admin");
-            },
+            onClose: () => router.push("/admin"),
+          });
+        } else {
+          setErrors({
+            server: error?.message || "Something went wrong. Please try again.",
           });
         }
-      } catch (error) {
-        console.error("Signup error:", error);
-        if (error.response && error.response.data.message) {
-          setErrors({ server: error.response.data.message });
-        } else {
-          setErrors({ server: "Something went wrong. Please try again." });
-        }
+      } catch (err) {
+        console.error("Signup error:", err);
+        setErrors({ server: "Something went wrong. Please try again." });
       } finally {
         setLoading(false);
       }

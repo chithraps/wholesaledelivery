@@ -1,6 +1,7 @@
 import { connect } from "@/dbConfig/DbConfig";
 import TruckDriver from "@/models/TruckDriver";
 import { NextResponse } from "next/server";
+import { STATUS_CODES } from "@/Constants/codeStatus";
 
 export async function PUT(request, { params }) {
   const { id } = await params;
@@ -11,7 +12,7 @@ export async function PUT(request, { params }) {
     if (!name || !mobile || !address || !licenseNumber) {
       return NextResponse.json(
         { error: "All fields are required" },
-        { status: 400 }
+        { status: STATUS_CODES.BAD_REQUEST }
       );
     }
     await connect();
@@ -22,13 +23,13 @@ export async function PUT(request, { params }) {
     );    
     return NextResponse.json(
       { message: "User updated successfully" },
-      { status: 200 }
+      { status: STATUS_CODES.OK }
     );
   } catch (error) {
     console.error("Error updating user:", error);
     return NextResponse.json(
       { error: "Failed to update User" },
-      { status: 500 }
+      { status: STATUS_CODES.INTERNAL_SERVER_ERROR }
     );
   }
 }

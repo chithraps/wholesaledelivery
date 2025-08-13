@@ -3,6 +3,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
+import { signUpTruckDriver } from "@/services/truckDriverService";
+import { STATUS_CODES } from "@/Constants/codeStatus";
 
 export default function TruckDriverSignup() {
   const router = useRouter();
@@ -50,22 +52,19 @@ export default function TruckDriverSignup() {
     if (!validateForm()) return;
 
     setLoading(true);
+  const { status, error } = await signUpTruckDriver(formData);
 
-    try {
-      const response = await axios.post("/api/truckDriver/tdSignUp", formData);
+  if (!error && status === STATUS_CODES.CREATED) {
+    toast.success("Information added successfully!", {
+      onClose: () => {
+        router.push("/");
+      },
+    });
+  } else {
+    console.error("Signup error:", error);
+  }
 
-      if (response.status === 201) {
-        toast.success("Information added successfully!", {
-            onClose: () => {
-              router.push("/");
-            },
-          });
-      }
-    } catch (error) {
-      console.error("Signup error:", error);     
-    } finally {
-      setLoading(false);
-    }
+  setLoading(false);
   };
 
 

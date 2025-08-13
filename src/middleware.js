@@ -38,5 +38,5 @@ export async function middleware(req) {
 }
 
 export const config = {
-  matcher: ["/truckDriver/tdDashboard/:path*", "/admin/dashboard:path*"], 
+  matcher: ["/truckDriver/tdDashboard/:path*", "/admin/dashboard/:path*"], 
 };

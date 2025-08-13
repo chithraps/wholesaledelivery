@@ -4,7 +4,9 @@ import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import axios from "axios";
 import TdNavbar from "@/components/TdNavbar";
-import { CheckCircle, Clock, Truck, XCircle } from "lucide-react"; 
+import { fetchTruckDriverOrders } from "@/services/truckDriverService";
+import { STATUS_CODES } from "@/Constants/codeStatus";
+import { CheckCircle, Clock, Truck, XCircle } from "lucide-react";
 
 const statusStyles = {
   pending: "bg-yellow-100 text-yellow-800",
@@ -25,28 +27,28 @@ export default function TruckDriverOrdersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const truckDriver = useSelector((state) => state.truckDriver.truckDriver);
-  console.log("in page.js")
+  
+  console.log("in page.js");
   useEffect(() => {
-    const fetchOrders = async () => {
+    const loadOrders = async () => {
       if (!truckDriver?._id) return;
+      console.log(truckDriver._id)
 
-      try {
-        const res = await axios.get("/api/truckDriver/viewOrders", {
-          params: {
-            truckDriverId: truckDriver._id,
-            page: currentPage,
-            limit: 2,
-          },
-        });
+      const { data, error } = await fetchTruckDriverOrders(
+        truckDriver._id,
+        currentPage,
+        2
+      );
 
-        setOrders(res.data.orders);
-        setTotalPages(res.data.totalPages);
-      } catch (err) {
-        console.error("Error fetching orders:", err);
+      if (!error) {
+        setOrders(data.orders);
+        setTotalPages(data.totalPages);
+      } else {
+        console.error("Error fetching orders:", error);
       }
     };
 
-    fetchOrders();
+    loadOrders();
   }, [truckDriver, currentPage]);
 
   const handlePrev = () => {
@@ -79,13 +81,19 @@ export default function TruckDriverOrdersPage() {
                     <div>
                       <h2 className="text-xl font-semibold text-gray-800">
                         Vendor:{" "}
-                        <span className="text-blue-700">{order.vendor?.name}</span>
+                        <span className="text-blue-700">
+                          {order.vendor?.name}
+                        </span>
                       </h2>
-                      <p className="text-sm text-gray-500">Order ID: {order._id}</p>
+                      <p className="text-sm text-gray-500">
+                        Order ID: {order._id}
+                      </p>
                     </div>
 
                     <div
-                      className={`inline-flex items-center text-sm font-medium px-3 py-1 rounded-full ${statusStyles[order.status]}`}
+                      className={`inline-flex items-center text-sm font-medium px-3 py-1 rounded-full ${
+                        statusStyles[order.status]
+                      }`}
                     >
                       {statusIcons[order.status]} {order.status}
                     </div>
@@ -94,17 +102,23 @@ export default function TruckDriverOrdersPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                     <div className="bg-gray-50 p-4 rounded-lg border">
                       <p className="text-gray-500 text-sm">Total Amount</p>
-                      <p className="text-lg font-bold text-gray-800">₹{order.totalAmount}</p>
+                      <p className="text-lg font-bold text-gray-800">
+                        ₹{order.totalAmount}
+                      </p>
                     </div>
                   </div>
 
                   <div>
-                    <h3 className="text-md font-medium text-gray-700 mb-2">Products</h3>
+                    <h3 className="text-md font-medium text-gray-700 mb-2">
+                      Products
+                    </h3>
                     <ul className="space-y-1 pl-4 list-disc text-gray-700">
                       {order.products.map((item, idx) => (
                         <li key={idx}>
-                          <span className="font-semibold">{item.product?.name}</span> —{" "}
-                          {item.quantity} pcs @ ₹{item.product?.price}
+                          <span className="font-semibold">
+                            {item.product?.name}
+                          </span>{" "}
+                          — {item.quantity} pcs @ ₹{item.product?.price}
                         </li>
                       ))}
                     </ul>

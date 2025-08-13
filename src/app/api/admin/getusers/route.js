@@ -1,6 +1,7 @@
 import {connect} from "@/dbConfig/DbConfig";
 import TruckDriver from "@/models/TruckDriver";
 import { NextResponse } from "next/server";
+import { STATUS_CODES } from "@/Constants/codeStatus";
 
 export async function GET(req) {
   await connect();
@@ -27,9 +28,9 @@ export async function GET(req) {
       .limit(limit);
       console.log(total,' ',truckDrivers)
 
-    return NextResponse.json({ data: truckDrivers, total }, { status: 200 });
+    return NextResponse.json({ data: truckDrivers, total }, { status: STATUS_CODES.OK });
   } catch (error) {
-    return NextResponse.json({ error: "Failed to fetch truck drivers" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch truck drivers" }, { status: STATUS_CODES.INTERNAL_SERVER_ERROR });
   }
 }
 

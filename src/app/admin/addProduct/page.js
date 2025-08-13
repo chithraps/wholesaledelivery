@@ -4,7 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
+import { addProductService } from "@/services/adminService";
 import AdminNavbar from "@/components/AdminNavbar";
+import { STATUS_CODES } from "@/Constants/codeStatus";
 
 export default function AddProductPage() {
   const [formData, setFormData] = useState({
@@ -30,30 +32,25 @@ export default function AddProductPage() {
     e.preventDefault();
     setLoading(true);
 
-    const data = new FormData(); 
-    data.append("name", formData.name);
-    data.append("price", formData.price);
-    data.append("category", formData.category);
-    data.append("stock", formData.stock);
+    const document = new FormData(); 
+    document.append("name", formData.name);
+    document.append("price", formData.price);
+    document.append("category", formData.category);
+    document.append("stock", formData.stock);
     if (formData.image) {
-      data.append("image", formData.image); 
+      document.append("image", formData.image); 
     }
 
-    try {
-      const response = await axios.post("/api/admin/products/addProduct", data, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+    const { data, status, error } = await addProductService(document);
 
-      if (response.status === 200) {
-        toast.success("Product added successfully!");
-        router.push("/admin/getProducts");
-      }
-    } catch (error) {
+    if (status === STATUS_CODES.OK) {
+      toast.success("Product added successfully!");
+      router.push("/admin/getProducts");
+    } else {
       toast.error("Failed to add product. Please try again.");
       console.error(error);
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
   };
 
   return (

@@ -5,6 +5,11 @@ import TdNavbar from "@/components/TdNavbar";
 import { toast, ToastContainer } from "react-toastify";
 import { useSelector } from "react-redux";
 import { Plus, Minus, Trash2, ShoppingCart, PackagePlus } from "lucide-react";
+import {
+  getTruckDriverVendors,
+  getVendorProducts, createTruckDriverOrder
+} from "@/services/truckDriverService";
+import { STATUS_CODES } from "@/Constants/codeStatus";
 
 const OrderManagementPage = () => {
   const [vendors, setVendors] = useState([]);
@@ -17,10 +22,11 @@ const OrderManagementPage = () => {
 
   useEffect(() => {
     const fetchVendors = async () => {
-      try {
-        const res = await axios.get("/api/truckDriver/getVendors");
-        setVendors(res.data);
-      } catch (error) {
+      const { data, status, error } = await getTruckDriverVendors();
+
+      if (!error && status === STATUS_CODES.OK) {
+        setVendors(data);
+      } else {
         toast.error("Failed to load vendors");
       }
     };
@@ -43,10 +49,15 @@ const OrderManagementPage = () => {
 
     if (vendorId) {
       try {
-        const res = await axios.get(`/api/admin/vendors/${vendorId}`);
-        setProducts(res.data.products);
-      } catch (error) {
-        toast.error("Failed to load products for selected vendor");
+        const { data, status, error } = await getVendorProducts(vendorId);
+
+        if (!error && status === STATUS_CODES.OK) {
+          setProducts(data.products || []);
+        } else {
+          toast.error("Failed to load products for selected vendor");
+        }
+      } catch (err) {
+        toast.error("Something went wrong while loading products");
       }
     }
   };
@@ -116,10 +127,15 @@ const OrderManagementPage = () => {
         ),
       };
 
-      await axios.post("/api/truckDriver/orders", orderData);
-      toast.success("Order created successfully!");
-      setCart([]);
-      setSelectedVendor("");
+      const { data, status, error } = await createTruckDriverOrder(orderData);
+
+      if (!error && status === STATUS_CODES.CREATED) {
+        toast.success("Order created successfully!");
+        setCart([]);
+        setSelectedVendor("");
+      } else {
+        toast.error(error || "Failed to create order");
+      }
     } catch (error) {
       toast.error("Failed to create order");
     }

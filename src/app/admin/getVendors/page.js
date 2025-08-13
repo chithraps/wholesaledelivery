@@ -4,8 +4,14 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import {
+  fetchVendorsService,
+  addVendorService,
+  fetchAllProductsService, updateVendorService,deleteVendorService
+} from "@/services/adminService";
 import AdminNavbar from "@/components/AdminNavbar";
 import { Edit, Trash2 } from "lucide-react";
+import { STATUS_CODES } from "@/Constants/codeStatus";
 
 export default function VendorsPage() {
   const [vendors, setVendors] = useState([]);
@@ -26,7 +32,7 @@ export default function VendorsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalVendors, setTotalVendors] = useState(0);
   const [allProducts, setAllProducts] = useState([]);
-  const itemsPerPage = 5;
+  const itemsPerPage = 10;
 
   useEffect(() => {
     fetchVendors();
@@ -34,13 +40,11 @@ export default function VendorsPage() {
   }, [currentPage]);
 
   const fetchAllProducts = async () => {
-    try {
-      const res = await axios.get("/api/admin/products");
-      if (res.status === 200) {
-        setAllProducts(res.data);
-        console.log(res.data);
-      }
-    } catch (error) {
+    const { data, status, error } = await fetchAllProductsService();
+
+    if (status === STATUS_CODES.OK && data) {
+      setAllProducts(data.products || []);
+    } else {
       console.error("Error fetching products", error);
     }
   };
@@ -48,15 +52,20 @@ export default function VendorsPage() {
   const fetchVendors = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(
-        `/api/admin/vendors?page=${currentPage}&limit=${itemsPerPage}`
+
+      const { data, status, error } = await fetchVendorsService(
+        currentPage,
+        itemsPerPage
       );
-      setVendors(response.data.vendors);
-      setTotalVendors(response.data.total);
-      setTotalPages(response.data.pages);
-    } catch (error) {
-      console.error("Error fetching vendors:", error);
-      toast.error("Failed to fetch vendors");
+
+      if (status === STATUS_CODES.OK && data) {
+        setVendors(data.vendors);
+        setTotalVendors(data.total);
+        setTotalPages(data.pages);
+      } else {
+        console.error("Error fetching vendors:", error);
+        toast.error("Failed to fetch vendors");
+      }
     } finally {
       setLoading(false);
     }
@@ -90,13 +99,18 @@ export default function VendorsPage() {
     if (!validateForm()) return;
 
     try {
-      await axios.post("/api/admin/vendors", formData);
-      toast.success("Vendor added successfully!");
-      setIsModalOpen(false);
-      setFormData({ name: "", location: "", contact: "", email: "" });
-      fetchVendors();
-    } catch (error) {
-      console.error("Error adding vendor:", error);
+      const { status, error } = await addVendorService(formData);
+
+      if (status === STATUS_CODES.CREATED) {
+        toast.success("Vendor added successfully!");
+        setIsModalOpen(false);
+        setFormData({ name: "", location: "", contact: "", email: "" });
+        fetchVendors();
+      } else {
+        toast.error(error || "Failed to add vendor.");
+      }
+    } catch (err) {
+      console.error("Error adding vendor:", err);
       toast.error("Failed to add vendor.");
     }
   };
@@ -118,13 +132,25 @@ export default function VendorsPage() {
     e.preventDefault();
     if (!validateForm()) return;
     console.log(currentVendorId);
-    try {
-      await axios.put(`/api/admin/vendors/${currentVendorId}`, formData);
+    console.log(currentVendorId);
+
+    const { data, status, error } = await updateVendorService(
+      currentVendorId,
+      formData
+    );
+
+    if (status === STATUS_CODES.OK) {
       toast.success("Vendor updated successfully!");
       setIsEditModalOpen(false);
-      setFormData({ name: "", location: "", contact: "", email: "",products: [],});
+      setFormData({
+        name: "",
+        location: "",
+        contact: "",
+        email: "",
+        products: [],
+      });
       fetchVendors();
-    } catch (error) {
+    } else {
       console.error("Error updating vendor:", error);
       toast.error("Failed to update vendor.");
     }
@@ -164,14 +190,14 @@ export default function VendorsPage() {
   };
 
   const handleDeleteConfirmation = async (vendorId) => {
-    try {
-      await axios.delete(`/api/admin/vendors/${vendorId}`);
-      toast.success("Vendor deleted successfully!");
-      fetchVendors();
-    } catch (error) {
-      console.error("Error deleting vendor:", error);
-      toast.error("Failed to delete vendor.");
-    }
+    const { error } = await deleteVendorService(vendorId);
+  if (!error) {
+    toast.success("Vendor deleted successfully!");
+    fetchVendors();
+  } else {
+    console.error("Error deleting vendor:", error);
+    toast.error("Failed to delete vendor.");
+  }
   };
 
   const handlePageChange = (page) => {

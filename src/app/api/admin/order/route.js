@@ -4,6 +4,7 @@ import TruckDriver from "@/models/TruckDriver";
 import Order from "@/models/Order";
 import Product from "@/models/Product";
 import { NextResponse } from "next/server";
+import { STATUS_CODES } from "@/Constants/codeStatus";
 
 export async function GET(req) {
   await connect();
@@ -20,7 +21,7 @@ export async function GET(req) {
       .populate("truckDriver", "name mobileNumber")
       .populate("vendor", "name location contact")
       .populate("products.product", "name price category");
-    console.log("orders ", orders);
+    console.log("orders *****", orders);
     return NextResponse.json(
       {
         orders,
@@ -28,13 +29,13 @@ export async function GET(req) {
         currentPage: page,
         totalPages: Math.ceil(totalOrders / limit),
       },
-      { status: 200 }
+      { status: STATUS_CODES.OK }
     );
   } catch (error) {
     console.log(error);
     return NextResponse.json(
       { error: "Failed to fetch orders" },
-      { status: 500 }
+      { status: STATUS_CODES.INTERNAL_SERVER_ERROR }
     );
   }
 }
@@ -56,14 +57,14 @@ export async function POST(req) {
           error:
             "Truck driver, vendor, and a valid product with quantity are required.",
         },
-        { status: 400 }
+        { status: STATUS_CODES.BAD_REQUEST }
       );
     }
 
     if (totalAmount < 0) {
       return NextResponse.json(
         { error: "Total amount cannot be negative." },
-        { status: 400 }
+        { status: STATUS_CODES.BAD_REQUEST }
       );
     }
 
@@ -90,26 +91,26 @@ export async function POST(req) {
     if (!updatedProduct) {
       return NextResponse.json(
         { error: "Product not found or update failed" },
-        { status: 400 }
+        { status: STATUS_CODES.BAD_REQUEST }
       );
     }
 
     if (updatedProduct.stock < 0) {
       return NextResponse.json(
         { error: "Insufficient stock available" },
-        { status: 400 }
+        { status: STATUS_CODES.BAD_REQUEST }
       );
     }
 
     return NextResponse.json(
       { message: "Order created successfully", order: newOrder },
-      { status: 201 }
+      { status: STATUS_CODES.CREATED }
     );
   } catch (error) {
     console.error("Error creating order:", error);
     return NextResponse.json(
       { error: "Failed to create order" },
-      { status: 500 }
+      { status: STATUS_CODES.INTERNAL_SERVER_ERROR }
     );
   }
 }

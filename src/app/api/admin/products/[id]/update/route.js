@@ -6,6 +6,7 @@ import {
   PutObjectCommand,
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
+import { STATUS_CODES } from "@/Constants/codeStatus";
 
 connect();
 
@@ -70,19 +71,19 @@ export async function PUT(request, { params }) {
     if (!updatedProduct) {
       return NextResponse.json(
         { message: "Product not found" },
-        { status: 404 }
+        { status: STATUS_CODES.NOT_FOUND }
       );
     }
 
     return NextResponse.json(
       { message: "Product updated successfully", product: updatedProduct },
-      { status: 200 }
+      { status: STATUS_CODES.OK }
     );
   } catch (error) {
     console.error(error);
     return NextResponse.json(
       { message: "Error updating product", error },
-      { status: 500 }
+      { status: STATUS_CODES.INTERNAL_SERVER_ERROR }
     );
   }
 }

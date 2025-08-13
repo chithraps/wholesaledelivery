@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
+import { getVendorProducts,fetchOrderData ,createOrder } from "@/services/adminService";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import AdminNavbar from "@/components/AdminNavbar";
@@ -22,20 +23,20 @@ const CreateOrder = () => {
     status: "pending",
   });
 
+  
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get("/api/admin/orderData");
-        setTruckDrivers(response.data.truckDrivers);
-        setVendors(response.data.vendors);
-        
-      } catch (error) {
+    async function loadData() {
+      const { data, error } = await fetchOrderData();
+      if (error) {
         console.error("Error fetching data:", error);
         toast.error("Failed to fetch data");
+        return;
       }
-    };
+      setTruckDrivers(data.truckDrivers || []);
+      setVendors(data.vendors || []);
+    }
 
-    fetchData();
+    loadData();
   }, []);
 
   const handleChange = (e) => {
@@ -62,15 +63,14 @@ const CreateOrder = () => {
       return;
     }
 
-    try {
-      const res = await axios.get(`/api/admin/vendors/${selectedVendorId}`);
-      if (res.status === 200) {
-        setProducts(res.data.products);
-      }
-    } catch (error) {
-      console.error("Error fetching vendor's products", error);
+    
+    const { data, error } = await getVendorProducts(selectedVendorId);
+    if (error) {
       toast.error("Failed to load vendor products");
+    } else {
+      setProducts(data.products);
     }
+    
   };
   const calculateTotalAmount = () => {
     const selectedProduct = products.find(
@@ -113,18 +113,18 @@ const CreateOrder = () => {
 
     if (!validateForm()) return;
 
-    try {
-      const totalAmount = calculateTotalAmount();
-      console.log(" formData ", formData);
-      await axios.post("/api/admin/order", {
-        ...formData,
-        totalAmount,
-      });
+    const totalAmount = calculateTotalAmount();
+    const { error } = await createOrder({
+      ...formData,
+      totalAmount,
+    });
+
+    if (error) {
+      toast.error("Failed to create order");
+      console.error("Error creating order:", error);
+    } else {
       toast.success("Order created successfully!");
       router.push("/admin/getOrder");
-    } catch (error) {
-      console.error("Error creating order:", error);
-      toast.error("Failed to create order");
     }
   };
 

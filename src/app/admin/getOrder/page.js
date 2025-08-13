@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { toast, ToastContainer } from "react-toastify";
+import { fetchOrdersService, deleteOrder } from "@/services/adminService";
+import { STATUS_CODES } from "@/Constants/codeStatus";
 import "react-toastify/dist/ReactToastify.css";
 import AdminNavbar from "@/components/AdminNavbar";
 import EditOrderModal from "@/components/EditOrderModal";
@@ -21,15 +23,16 @@ const OrdersPage = () => {
   const fetchOrders = async (page = 1) => {
     setLoading(true);
     try {
-      const response = await axios.get(
-        `/api/admin/order?page=${page}&limit=${limit}`
-      );
-      if (response.status === 200) {
-        setOrders(response.data.orders);
-        setTotalPages(response.data.totalPages);
+      const { data, status, error } = await fetchOrdersService(page, limit);
+
+      if (status === STATUS_CODES.OK) {
+        setOrders(data.orders);
+        setTotalPages(data.totalPages);
+      } else {
+        toast.error(error || "Failed to fetch orders");
       }
-    } catch (error) {
-      console.error("Error fetching orders:", error);
+    } catch (err) {
+      console.error("Error fetching orders:", err);
       toast.error("Failed to fetch orders");
     } finally {
       setLoading(false);
@@ -48,15 +51,12 @@ const OrdersPage = () => {
           <button
             className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
             onClick={async () => {
-              try {
-                const response = await axios.delete(
-                  `/api/admin/order/${orderId}`
-                );
-                if (response.status === 200) {
-                  toast.success("Order deleted successfully");
-                  fetchOrders(currentPage); // Refresh orders
-                }
-              } catch (error) {
+              const { status, error } = await deleteOrder(orderId);
+
+              if (status === 200) {
+                toast.success("Order deleted successfully");
+                fetchOrders(currentPage);
+              } else {
                 console.error("Error deleting order:", error);
                 toast.error("Failed to delete order");
               }
@@ -87,14 +87,14 @@ const OrdersPage = () => {
   };
 
   const handleOrderUpdate = (updatedOrder) => {
-  if (!updatedOrder || !updatedOrder._id) return;
+    if (!updatedOrder || !updatedOrder._id) return;
 
-  setOrders((prevOrders) =>
-    prevOrders.map((order) =>
-      order._id === updatedOrder._id ? updatedOrder : order
-    )
-  );
-};
+    setOrders((prevOrders) =>
+      prevOrders.map((order) =>
+        order._id === updatedOrder._id ? updatedOrder : order
+      )
+    );
+  };
 
   if (loading) return <p className="text-center mt-10">Loading orders...</p>;
 

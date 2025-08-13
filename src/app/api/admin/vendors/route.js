@@ -2,6 +2,7 @@ import { connect } from "@/dbConfig/DbConfig";
 import Vendor from "@/models/Vendor";
 import Product from "@/models/Product";
 import { NextResponse } from "next/server";
+import { STATUS_CODES } from "@/Constants/codeStatus";
 
 export async function POST(request) {
   try {
@@ -11,7 +12,7 @@ export async function POST(request) {
     if (!name || !location || !contact || !email) {
       return NextResponse.json(
         { error: "All fields required" },
-        { status: 404 }
+        { status: STATUS_CODES.NOT_FOUND }
       );
     }
     const newVendor = new Vendor({ name, location, contact, email,products });
@@ -19,9 +20,9 @@ export async function POST(request) {
     return NextResponse.json({
       message: "Vendor created successfully",
       vendor: newVendor,
-    });
+    },{ status: STATUS_CODES.CREATED });
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: STATUS_CODES.INTERNAL_SERVER_ERROR });
   }
 }
 
@@ -47,7 +48,7 @@ export async function GET(request) {
       pages: Math.ceil(total / limit),
     });
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: STATUS_CODES.INTERNAL_SERVER_ERROR });
   }
 }
 

@@ -7,6 +7,7 @@ import {
   GetObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { STATUS_CODES } from "@/Constants/codeStatus";
 
 const s3 = new S3Client({
     region: process.env.S3_BUCKET_REGION,
@@ -39,7 +40,7 @@ export async function POST(request) {
     if (!imageFile) {
         return NextResponse.json(
             { error: "No files received." },
-            { status: 400 }
+            { status: STATUS_CODES.BAD_REQUEST }
           );
     }    
     const buffer = Buffer.from(await imageFile.arrayBuffer());
@@ -68,13 +69,13 @@ export async function POST(request) {
       await newProduct.save();
       return NextResponse.json(
         { message: "Product uploaded successfully" },
-        { status: 200 }
+        { status: STATUS_CODES.OK }
       );
   } catch (error) {
     console.log(error);
     return NextResponse.json(
       { error: "Failed to add products" },
-      { status: 500 }
+      { status: STATUS_CODES.INTERNAL_SERVER_ERROR }
     );
   }
 }

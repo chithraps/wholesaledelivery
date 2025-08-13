@@ -1,6 +1,8 @@
 import { connect } from "@/dbConfig/DbConfig";
 import TruckDriver from "@/models/TruckDriver";
 import bcrypt from "bcryptjs";
+import { STATUS_CODES } from "@/Constants/codeStatus";
+
 
 export async function POST(request) {
   console.log("in signup post method ");
@@ -17,7 +19,7 @@ export async function POST(request) {
     if (existingDriver) {
       return Response.json(
         { message: "Mobile already in use" },
-        { status: 400 }
+        { status: STATUS_CODES.BAD_REQUEST }
       );
     }
 
@@ -33,9 +35,9 @@ export async function POST(request) {
 
     await newTruckDriver.save();
 
-    return Response.json({ message: "Signup successful!" }, { status: 201 });
+    return Response.json({ message: "Signup successful!" }, { status: STATUS_CODES.CREATED });
   } catch (error) {
     console.error("Error signing up:", error);
-    return Response.json({ message: "Internal Server Error" }, { status: 500 });
+    return Response.json({ message: "Internal Server Error" }, { status: STATUS_CODES.INTERNAL_SERVER_ERROR });
   }
 }

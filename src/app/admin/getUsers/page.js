@@ -2,7 +2,9 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
+import { getTruckDrivers, deleteUser,addTruckDriver,updateTruckDriver } from "@/services/adminService";
 import AdminNavbar from "@/components/AdminNavbar";
+import { STATUS_CODES } from "@/Constants/codeStatus";
 import {
   Edit,
   Trash2,
@@ -35,25 +37,32 @@ export default function GetUsersPage() {
   const [selectedDriver, setSelectedDriver] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [errors, setErrors] = useState({});
   const driversPerPage = 4;
 
   useEffect(() => {
-  const delayDebounce = setTimeout(() => {
-    fetchTruckDrivers(currentPage, searchTerm);
-  }, 500); 
+    const delayDebounce = setTimeout(() => {
+      fetchTruckDrivers(currentPage, searchTerm);
+    }, 500);
 
-  return () => clearTimeout(delayDebounce); 
-}, [searchTerm, currentPage]);
+    return () => clearTimeout(delayDebounce);
+  }, [searchTerm, currentPage]);
 
   const fetchTruckDrivers = async (page = 1, search = "") => {
     setLoading(true);
     try {
-      const response = await axios.get(
-        `/api/admin/getusers?page=${page}&limit=${driversPerPage}&search=${search}`
+      const { status, data, error } = await getTruckDrivers(
+        page,
+        driversPerPage,
+        search
       );
-      if (response.status === 200) {
-        setTruckDrivers(response.data.data);
-        setTotalDrivers(response.data.total);
+
+      if (status === STATUS_CODES.OK) {
+        setTruckDrivers(data.data);
+        setTotalDrivers(data.total);
+      } else {
+        console.error("Error fetching truck drivers:", error);
+        setError("Failed to fetch truck drivers.");
       }
     } catch (err) {
       console.error(err);
@@ -64,14 +73,13 @@ export default function GetUsersPage() {
   };
 
   const handleDelete = async (id) => {
-    try {
-      const response = await axios.delete(`/api/admin/deleteuser/${id}`);
-      if (response.status === 200) {
-        toast.success("Truck driver deleted successfully");
-        setTruckDrivers(truckDrivers.filter((driver) => driver._id !== id));
-      }
-    } catch (err) {
-      console.error(err);
+    const { status, error } = await deleteUser(id);
+
+    if (status === STATUS_CODES.OK) {
+      toast.success("Truck driver deleted successfully");
+      setTruckDrivers((prev) => prev.filter((driver) => driver._id !== id));
+    } else {
+      console.error("Failed to delete truck driver:", error);
       toast.error("Failed to delete truck driver");
     }
   };
@@ -83,41 +91,74 @@ export default function GetUsersPage() {
 
   const handleUpdate = async () => {
     try {
-      await axios.put(
-        `/api/admin/updateuser/${selectedDriver._id}`,
-        selectedDriver
-      );
+    const { status, error } = await updateTruckDriver(selectedDriver._id, selectedDriver);
+
+    if (status === STATUS_CODES.OK) {
       toast.success("Truck driver updated successfully");
       setIsModalOpen(false);
       fetchTruckDrivers();
-    } catch (err) {
-      console.error(err);
+    } else {
       toast.error("Failed to update truck driver");
     }
+  } catch (err) {
+    console.error(err);
+    toast.error("Something went wrong");
+  }
+  };
+  const validateNewUser = () => {
+    const newErrors = {};
+
+    if (!newUser.name.trim()) newErrors.name = "Name is required";
+
+    if (!newUser.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newUser.email)) {
+      newErrors.email = "Enter a valid email";
+    }
+
+    if (!newUser.mobile.trim()) {
+      newErrors.mobile = "Mobile number is required";
+    } else if (!/^\d{10}$/.test(newUser.mobile)) {
+      newErrors.mobile = "Enter a valid 10-digit number";
+    }
+
+    if (!newUser.address.trim()) newErrors.address = "Address is required";
+
+    if (!newUser.licenseNumber.trim())
+      newErrors.licenseNumber = "License number is required";
+
+    if (!newUser.password?.trim()) {
+      newErrors.password = "Password is required";
+    } else if (newUser.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleAddNewUser = async () => {
-    try {
-      const response = await axios.post("/api/truckDriver/tdSignUp", newUser);
-      if (response.status === 201) {
-        toast.success("Truck driver added successfully");
-        setIsNewUserModalOpen(false);
-        setNewUser({
-          name: "",
-          email: "",
-          mobile: "",
-          address: "",
-          licenseNumber: "",
-        });
-        fetchTruckDrivers();
-      }
-    } catch (err) {
-      console.error(err);
+    if (!validateNewUser()) return;
+    const { data, status, error } = await addTruckDriver(newUser);
+
+    if (status === 201) {
+      toast.success("Truck driver added successfully");
+      setIsNewUserModalOpen(false);
+      setNewUser({
+        name: "",
+        email: "",
+        mobile: "",
+        address: "",
+        licenseNumber: "",
+      });
+      fetchTruckDrivers();
+    } else {
+      console.error(error);
       toast.error("Failed to add truck driver");
     }
   };
-const currentDrivers = truckDrivers;
-const totalPages = Math.ceil(totalDrivers / driversPerPage);
+  const currentDrivers = truckDrivers;
+  const totalPages = Math.ceil(totalDrivers / driversPerPage);
 
   if (loading)
     return (
@@ -270,7 +311,6 @@ const totalPages = Math.ceil(totalDrivers / driversPerPage);
                             <div className="ml-4">
                               <div className="text-sm font-medium text-gray-900">
                                 {driver.name}
-                                
                               </div>
                             </div>
                           </div>
@@ -463,7 +503,10 @@ const totalPages = Math.ceil(totalDrivers / driversPerPage);
                 Add New Driver
               </h2>
               <button
-                onClick={() => setIsNewUserModalOpen(false)}
+                onClick={() => {
+                  setIsNewUserModalOpen(false);
+                  setErrors("");
+                }}
                 className="text-gray-400 hover:text-gray-500"
               >
                 <X size={24} />
@@ -482,6 +525,9 @@ const totalPages = Math.ceil(totalDrivers / driversPerPage);
                     setNewUser({ ...newUser, name: e.target.value })
                   }
                 />
+                {errors.name && (
+                  <p className="text-red-500 text-sm mt-1">{errors.name}</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -495,6 +541,9 @@ const totalPages = Math.ceil(totalDrivers / driversPerPage);
                     setNewUser({ ...newUser, email: e.target.value })
                   }
                 />
+                {errors.email && (
+                  <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -508,6 +557,9 @@ const totalPages = Math.ceil(totalDrivers / driversPerPage);
                     setNewUser({ ...newUser, mobile: e.target.value })
                   }
                 />
+                {errors.mobile && (
+                  <p className="text-red-500 text-sm mt-1">{errors.mobile}</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -521,6 +573,9 @@ const totalPages = Math.ceil(totalDrivers / driversPerPage);
                     setNewUser({ ...newUser, address: e.target.value })
                   }
                 />
+                {errors.address && (
+                  <p className="text-red-500 text-sm mt-1">{errors.address}</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -534,6 +589,11 @@ const totalPages = Math.ceil(totalDrivers / driversPerPage);
                     setNewUser({ ...newUser, licenseNumber: e.target.value })
                   }
                 />
+                {errors.licenseNumber && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.licenseNumber}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -544,14 +604,19 @@ const totalPages = Math.ceil(totalDrivers / driversPerPage);
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   value={newUser.password}
                   onChange={(e) =>
-                    setNewUser({ ...newUser, paswword: e.target.value })
+                    setNewUser({ ...newUser, password: e.target.value })
                   }
                 />
+                {errors.password && (
+                  <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+                )}
               </div>
             </div>
             <div className="flex justify-end space-x-3 border-t border-gray-200 p-4">
               <button
-                onClick={() => setIsNewUserModalOpen(false)}
+                onClick={() => {
+                  setIsNewUserModalOpen(false), setErrors("");
+                }}
                 className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
               >
                 Cancel

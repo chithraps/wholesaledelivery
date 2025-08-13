@@ -3,6 +3,7 @@ import { connect } from "@/dbConfig/DbConfig";
 import Admin from "@/models/Admin";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
+import { STATUS_CODES } from "@/Constants/codeStatus";
 
 export async function POST(req) {
   try {
@@ -14,14 +15,14 @@ export async function POST(req) {
     const admin = await Admin.findOne({ email });
     console.log("admin object ",admin)
     if (!admin) {
-      return NextResponse.json({ message: "User not found" }, { status: 404 });
+      return NextResponse.json({ message: "User not found" }, { status: STATUS_CODES.NOT_FOUND });
     }
 
     const isMatch = await bcrypt.compare(password, admin.password);
     if (!isMatch) {
       return NextResponse.json(
         { message: "Invalid credentials" },
-        { status: 401 }
+        { status: STATUS_CODES.UNAUTHORIZED }
       );
     }
 
@@ -36,7 +37,7 @@ export async function POST(req) {
 
     const response = NextResponse.json(
       { message: "Login successful", admin: adminData },
-      { status: 200 }
+      { status: STATUS_CODES.OK }
     );
 
     response.headers.append(
@@ -51,7 +52,7 @@ export async function POST(req) {
     console.error("Login Error:", error);
     return NextResponse.json(
       { message: "Something went wrong" },
-      { status: 500 }
+      { status: STATUS_CODES.INTERNAL_SERVER_ERROR }
     );
   }
 }
